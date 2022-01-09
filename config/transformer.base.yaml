@@ -1,0 +1,9 @@
+model:
+  name: Transformer
+  max_positions: 5000
+  # Base Transformer setting
+  num_blocks:    6
+  num_heads:     8
+  dim_embed:     512
+  dim_pffn:      2048
+  drop_prob:     0.1
