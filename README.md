@@ -12,7 +12,7 @@ You can use any Python virtual environment like venv and conda.
 
 For example, with venv:
 
-```python
+```bash
 python3 -m venv venv
 source venv/bin/activate
 
@@ -26,7 +26,7 @@ To use Spacy's tokenizer, make sure to download required languages.
 
 For example, English and Germany tokenizers can be downloaded as below:
 
-```python
+```bash
 python -m spacy download en_core_web_sm
 python -m spacy download de_core_news_sm
 ```
@@ -35,7 +35,7 @@ python -m spacy download de_core_news_sm
 
 This project uses text datasets from Torchtext.  
 
-```
+```python
 from torchtext import datasets
 ```
 
@@ -43,22 +43,36 @@ The default configuration uses `Multi30k` dataset.
 
 ## Training
 
-```python
-python train.py [a path to a config YAML file]
+```bash
+python train.py config_path
 ```
 
 The default config path is `config/config.yaml`.
 
+It is possible to resume training from a checkpoint.
+
+```bash
+python train.py --checkpoint_path runs/20220108-164720-Multi30k-Transformer/checkpoint-010-2.3343.pt
+```
+
+You can run `tensorboard` to see the training progress.
+
+```bash
+tensorboard --logdir=runs
+```
+
+The logs are created under `runs`.
+
 ## Test
 
-```python
-python test.py [a path to PyTorch model]
+```bash
+python test.py checkpoint_path
 ```
 
 Example,
 
-```python
-python test.py runs/20220108-164720-Multi30k-Transformer/model-010-2.3343.pt
+```bash
+python test.py runs/20220108-164720-Multi30k-Transformer/checkpoint-010-2.3343.pt
 ```
 
 `config.yaml` is copied to the model folder when training starts, and the `test.py` assumes the existence of a config yaml file.
@@ -67,7 +81,7 @@ python test.py runs/20220108-164720-Multi30k-Transformer/model-010-2.3343.pt
 
 There are some unit tests in the `tests` folder.
 
-```python
+```bash
 pytest tests
 ```
 

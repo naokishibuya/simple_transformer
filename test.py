@@ -7,11 +7,11 @@ import simple_transformer as T
 def main() -> None:
     # Parse arguments
     parser = argparse.ArgumentParser(description='Transformer testing')
-    parser.add_argument('model_path', type=str, help='model path')
+    parser.add_argument('checkpoint_path', type=str, help='Checkpoint path')
     args = parser.parse_args()
 
     # Load config and vocab pair
-    model_dir = os.path.dirname(args.model_path)
+    model_dir = os.path.dirname(args.checkpoint_path)
     config = T.load_config(os.path.join(model_dir, 'config.yaml'))
     src_vocab, tgt_vocab = T.load_vocab_pair(**config.vocab)
 
@@ -20,7 +20,8 @@ def main() -> None:
         input_vocab_size= len(src_vocab),
         output_vocab_size=len(tgt_vocab),
         **config.model)
-    model.load_state_dict(torch.load(args.model_path))
+    checkpoint = torch.load(args.checkpoint_path)
+    model.load_state_dict(checkpoint['state_dict'])
 
     translator = T.make_translator(
         transformer=model, 
