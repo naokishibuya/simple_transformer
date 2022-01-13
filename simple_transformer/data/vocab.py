@@ -63,7 +63,7 @@ def load_vocab(name: str, language: str, texts: List[str]) -> Vocab:
 
     if len(tokens)==0:
         print('Generating target vocab...')
-        tokens = generate_tokens(tokenizer, texts)
+        tokens = generate_tokens(tokenizer, texts, path)
         save_tokens(tokens, path)
         print(f'Saved tokens in {path}')
 

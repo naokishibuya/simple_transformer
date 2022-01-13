@@ -1,0 +1,13 @@
+!include data.multi30k.de-en.yaml
+!include transformer.small.yaml
+!include translator.greedy.yaml
+!include train.small.yaml
+
+scheduler:
+  name: Scheduler
+  dim_embed: 256 # make sure this aligns with the model
+  warmup_steps: 4000
+
+loss:
+  name: TranslationLoss
+  # no label smoothing
