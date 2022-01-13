@@ -47,7 +47,7 @@ The default configuration uses `Multi30k` dataset.
 python train.py config_path
 ```
 
-The default config path is `config/config.yaml`.
+The default config path is `config/config.small.yaml`.
 
 It is possible to resume training from a checkpoint.
 

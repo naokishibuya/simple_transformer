@@ -1,0 +1,10 @@
+!include data.iwslt2017.de-en.yaml
+!include transformer.base.yaml
+!include translator.greedy.yaml
+!include train.base.yaml
+
+# no learning rate scheduler
+
+loss:
+  name: TranslationLoss
+  # no label smoothing

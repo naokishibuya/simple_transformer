@@ -1,0 +1,13 @@
+!include data.iwslt2017.de-en.yaml
+!include transformer.base.yaml
+!include translator.greedy.yaml
+!include train.base.yaml
+
+scheduler:
+  name: Scheduler
+  dim_embed: 512 # make sure this aligns with the model
+  warmup_steps: 4000
+
+loss:
+  name: TranslationLoss
+  # no label smoothing

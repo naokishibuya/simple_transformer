@@ -29,6 +29,9 @@ class Config(dict):
             setattr(self, key, val)
             self[key] = val
 
+    def __str__(self) -> str:
+        return yaml.dump(self.d, sort_keys=False)
+
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as f:
