@@ -49,11 +49,7 @@ python train.py config_path
 
 The default config path is `config/config.small.yaml`.
 
-It is possible to resume training from a checkpoint.
-
-```bash
-python train.py --checkpoint_path runs/20220108-164720-Multi30k-Transformer/checkpoint-010-2.3343.pt
-```
+The train script creates tensorboard log files under `runs`, and saves `config.yaml` and model checkpoints there.
 
 You can run `tensorboard` to see the training progress.
 
@@ -61,7 +57,11 @@ You can run `tensorboard` to see the training progress.
 tensorboard --logdir=runs
 ```
 
-The logs are created under `runs`.
+It is possible to resume training from a checkpoint.
+
+```bash
+python train.py --checkpoint_path runs/20220108-164720-Multi30k-Transformer/checkpoint-010-2.3343.pt
+```
 
 ## Test
 
@@ -75,7 +75,7 @@ Example,
 python test.py runs/20220108-164720-Multi30k-Transformer/checkpoint-010-2.3343.pt
 ```
 
-`config.yaml` is copied to the model folder when training starts, and the `test.py` assumes the existence of a config yaml file.
+The `test.py` resumes with the checkpoint and `config.yaml` in the same directory.
 
 ## Unit tests
 
