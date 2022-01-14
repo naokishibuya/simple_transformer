@@ -92,7 +92,7 @@ def main() -> None:
         writer.add_scalar('val/loss', val_loss, epoch)
 
         # save the model per epoch
-        model_save_path = os.path.join(log_dir, f'checkpoint-{epoch+1:03d}-{val_loss:0.4f}.pt')
+        model_save_path = os.path.join(log_dir, f'checkpoint-{epoch:03d}-{val_loss:0.4f}.pt')
         state_dict = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
         checkpoint = {'epoch': epoch, 'model': state_dict, 'optimizer': optimizer.state_dict()}
         if scheduler is not None:
