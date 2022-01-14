@@ -14,13 +14,14 @@ class Scheduler(_LRScheduler):
                  last_epoch: int=-1,
                  verbose: bool=False) -> None:
 
-        self.calc_lr = lambda step: calc_lr(step, dim_embed, warmup_steps)
+        self.dim_embed = dim_embed
+        self.warmup_steps = warmup_steps
         self.num_param_groups = len(optimizer.param_groups)
 
         super().__init__(optimizer, last_epoch, verbose)
         
     def get_lr(self) -> float:
-        lr = self.calc_lr(self._step_count)
+        lr = calc_lr(self._step_count, self.dim_embed, self.warmup_steps)
         return [lr] * self.num_param_groups
 
 

@@ -36,6 +36,10 @@ class Vocab:
         text = text.strip()
         return [self.to_index(token.text) for token in self.tokenizer(text)]
 
+    def tokenize(self, text: str) -> List[str]:
+        text = text.strip()
+        return [token.text for token in self.tokenizer(text)]
+
     def to_index(self, token: str) -> int:
         return self.index_lookup[token] if token in self.index_lookup else UNK_IDX
 

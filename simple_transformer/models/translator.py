@@ -44,13 +44,6 @@ class GreedyTranslator(Translator):
 
             # Next Input to Decoder
             tgt = torch.cat([tgt, token_index], dim=1)
-        
-        # Simple handling of spaces (not the best)
-        output = ''
-        for i in tgt[0, 1:].numpy():
-            token = self.tgt_vocab.tokens[i]
-            if len(output)==0 or token in ('.', '!', ',', ';', ':', '\''):
-                output += token
-            else:
-                output += ' ' + token
-        return output
+
+        # text tokens
+        return [self.tgt_vocab.tokens[i] for i in tgt[0, 1:].numpy()]
