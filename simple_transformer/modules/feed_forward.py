@@ -10,11 +10,11 @@ class PositionwiseFeedForward(nn.Module):
     The first linear operation expands the dimensions so that ReLU will not lose too much information.
     The second linear operation restores the original dimensions.
 
-    (batch_size, max_sentence_length, dim_embed) =>
-    (batch_size, max_sentence_length, dim_pfnn ) =>
-    (batch_size, max_sentence_length, dim_embed)
+    (batch_size, max_sequence_length, dim_embed) =>
+    (batch_size, max_sequence_length, dim_pfnn ) =>
+    (batch_size, max_sequence_length, dim_embed)
 
-    Note: max_sentence_length is from the current batch.
+    Note: max_sequence_length is from the current batch.
     """
     def __init__(self, dim_embed: int, dim_pffn: int, drop_prob: float) -> None:
         super().__init__()

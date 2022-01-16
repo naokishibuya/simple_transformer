@@ -40,7 +40,7 @@ class PositionalEncoding(nn.Module):
         self.dropout = nn.Dropout(p=drop_prob)
         
     def forward(self, x: Tensor) -> Tensor:
-        max_sentence_length = x.size(1)          # The max length of sentences in the current batch
-        x = x + self.pe[:, :max_sentence_length] # Add positional encoding up to the max sentence length
+        max_sequence_length = x.size(1)          # The max length of sequences in the current batch
+        x = x + self.pe[:, :max_sequence_length] # Add positional encoding up to the max sequence length
         x = self.dropout(x)
         return x

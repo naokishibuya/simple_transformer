@@ -1,0 +1,5 @@
+name: BeamSearchTranslator
+output_length_extra: 50
+beam_size: 4
+alpha: 0.6
+

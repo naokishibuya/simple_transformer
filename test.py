@@ -12,6 +12,8 @@ def main() -> None:
     # Parse arguments
     parser = argparse.ArgumentParser(description='Transformer testing')
     parser.add_argument('checkpoint_path', type=str, help='Checkpoint path')
+    parser.add_argument('--config_path', type=str, default='config/translator.beam.yaml', help='Translator config path')
+    parser.add_argument('--overrides', type=str, default=None, help='Overrides for translator config') # "{'beam_size':2}"
     parser.add_argument('--verbose', action='store_true', help='Verbose mode')
     args = parser.parse_args()
 
@@ -20,7 +22,7 @@ def main() -> None:
     config = T.load_config(os.path.join(model_dir, 'config.yaml'))
     src_vocab, tgt_vocab = T.load_vocab_pair(**config.vocab)
 
-    # Build greedy translator using a pretrained transformer
+    # Load a pretrained transformer
     model = T.make_model(
         input_vocab_size= len(src_vocab),
         output_vocab_size=len(tgt_vocab),
@@ -28,11 +30,16 @@ def main() -> None:
     checkpoint = torch.load(args.checkpoint_path)
     model.load_state_dict(checkpoint['model'])
 
+    # Build translator
+    translator_config = T.load_config(args.config_path)
+    if args.overrides is not None:
+        translator_config = translator_config.update(eval(args.overrides))
+    print(f'Translator:\n{translator_config}')
     translator = T.make_translator(
-        transformer=model, 
+        model=model,
         src_vocab=src_vocab,
         tgt_vocab=tgt_vocab,
-        **config.translator)
+        **translator_config)
 
     # Load test dataset and translate
     test_dataset = T.load_dataset(split='test', **config.dataset)

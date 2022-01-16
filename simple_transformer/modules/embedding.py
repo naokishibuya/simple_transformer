@@ -18,11 +18,11 @@ class Embedding(nn.Module):
         """ Looks up and returns an embedding vector for each token index.
 
         Args:
-            x: A list of tokens (indices).  The maximum sentence length in the batch is the second dimension.
+            x: A list of tokens (indices).  The maximum sequence length in the batch is the second dimension.
 
         Shape:
-            - x: (batch_size, max_sentence_length)
+            - x: (batch_size, max_sequence_length)
         """        
-        x = self.embedding(x.long()) # (batch_size, max_sentence_length, dim_embed)    
+        x = self.embedding(x.long()) # (batch_size, max_sequence_length, dim_embed)    
         x = x * self.sqrt_dim_embed  # Scaling
         return x

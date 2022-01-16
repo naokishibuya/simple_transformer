@@ -29,6 +29,10 @@ class Config(dict):
             setattr(self, key, val)
             self[key] = val
 
+    def update(self, d: dict) -> dict:
+        d = self.d.update(d)
+        return Config(d)
+
     def __str__(self) -> str:
         return yaml.dump(self.d, sort_keys=False)
 
@@ -43,7 +47,7 @@ def load_config(path: str) -> Config:
     return Config(yaml.safe_load(yaml_str))
 
 
-def load_yaml(path: str, indent: int=0) -> Config:
+def load_yaml(path: str, indent: int=0) -> str:
     root_dir = os.path.dirname(path)
     with open(path, 'r') as f:
         s = ''

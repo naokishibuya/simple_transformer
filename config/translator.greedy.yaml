@@ -1,3 +1,2 @@
-translator:
-  name: GreedyTranslator
-  output_length_extra: 50
+name: GreedyTranslator
+output_length_extra: 50

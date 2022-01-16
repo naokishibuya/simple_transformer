@@ -47,7 +47,7 @@ The default configuration uses `Multi30k` dataset.
 python train.py config_path
 ```
 
-The default config path is `config/config.small.yaml`.
+The default config path is `config/train.small.yaml`.
 
 The train script creates tensorboard log files under `runs`, and saves `config.yaml` and model checkpoints there.
 
@@ -76,6 +76,14 @@ python test.py runs/20220108-164720-Multi30k-Transformer/checkpoint-010-2.3343.p
 ```
 
 The `test.py` resumes with the checkpoint and `config.yaml` in the same directory.
+
+You can specify translator configuration by:
+
+```bash
+python test.py checkpoint_path [--config_path config_path]
+```
+
+The default is `config/translator.beam.yaml`.
 
 ## Unit tests
 
