@@ -14,7 +14,7 @@ import simple_transformer as T
 def main() -> None:
     # Command line args
     parser = argparse.ArgumentParser(description='Transformer training')
-    parser.add_argument('config_path', type=str, nargs='?', default='config/config.small.yaml', help='Config YAML path')
+    parser.add_argument('config_path', type=str, nargs='?', default='config/train.small.yaml', help='Config YAML path')
     parser.add_argument('--checkpoint_path', type=str, help='Checkpoint path')
     args = parser.parse_args()
 
@@ -153,12 +153,14 @@ def validate(epoch: int,
         iter.set_description(f'Valid {epoch}')
 
         for src_batch, tgt_batch, tgt_label, src_mask, tgt_mask in iter:
-            # feed forward
-            logits = model(src_batch, tgt_batch, src_mask, tgt_mask)
+            with torch.no_grad():
+                # feed forward
+                logits = model(src_batch, tgt_batch, src_mask, tgt_mask)
 
-            # loss calculation
-            loss = loss_func(logits, tgt_label)
-            total_loss += loss.item()
+                # loss calculation
+                loss = loss_func(logits, tgt_label)
+                total_loss += loss.item()
+
             iter.set_postfix(loss=loss.item())
 
     # average validation loss

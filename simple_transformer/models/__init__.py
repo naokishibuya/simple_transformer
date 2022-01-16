@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .transformer import Transformer
-from .translator import Translator, GreedyTranslator
+from .translator import Translator, GreedyTranslator, BeamSearchTranslator
 
 
 def make_model(name: str, **kwargs) -> nn.Module:

@@ -38,7 +38,7 @@ class Vocab:
 
     def tokenize(self, text: str) -> List[str]:
         text = text.strip()
-        return [token.text for token in self.tokenizer(text)]
+        return [token.text for token in self.tokenizer(text) if len(token.text.strip()) > 0]
 
     def to_index(self, token: str) -> int:
         return self.index_lookup[token] if token in self.index_lookup else UNK_IDX
@@ -89,7 +89,7 @@ def generate_tokens(tokenizer: spacy.language.Language, texts: List[str], path: 
     # Parse input texts and update the lookup
     counter: Counter = Counter()
     for doc in tokenizer.pipe(texts):
-        counter.update([token.text for token in doc])
+        counter.update([token.text for token in doc if len(token.text.strip())>0])
 
     # Tokens in frequency order
     return [token for token, count in counter.most_common()]

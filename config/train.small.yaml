@@ -1,3 +1,6 @@
+!include data.multi30k.de-en.yaml
+!include transformer.small.yaml
+
 epochs: 40
 batch_size: 64
 
@@ -8,4 +11,12 @@ optimizer:
   - 0.9
   - 0.98
   eps: 1.0e-9
-  
+
+scheduler:
+  name: Scheduler
+  dim_embed: 256 # make sure this aligns with the model
+  warmup_steps: 4000
+
+loss:
+  name: TranslationLoss
+  label_smoothing: 0.1

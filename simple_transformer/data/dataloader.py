@@ -55,8 +55,8 @@ def create_masks(src_batch: Tensor, tgt_batch: Tensor) -> Tuple[Tensor, Tensor]:
         tgt_batch: target token indicies
 
     Shape:
-        - src_batch: (batch_size, max_src_sentence_length) # `max` length is source batch
-        - tgt_batch: (batch_size, max_tgt_sentence_length) # `max` length in target batch
+        - src_batch: (batch_size, max_src_sequence_length) # `max` length is source batch
+        - tgt_batch: (batch_size, max_tgt_sequence_length) # `max` length in target batch
 
     Returns:
         Source mask batch and target mask batch.  
@@ -98,16 +98,16 @@ def create_masks(src_batch: Tensor, tgt_batch: Tensor) -> Tuple[Tensor, Tensor]:
         ```
     """
     # pad mask - set to 1 where we want to process
-    src_pad_mask = (src_batch != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_tgt_sentence_length)
-    tgt_pad_mask = (tgt_batch != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_src_sentence_length)
+    src_pad_mask = (src_batch != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_tgt_sequence_length)
+    tgt_pad_mask = (tgt_batch != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_src_sequence_length)
 
     # subsequent mask for decoder inputs
-    max_tgt_sentence_length = tgt_batch.shape[1]
-    tgt_attention_square = (max_tgt_sentence_length, max_tgt_sentence_length)
+    max_tgt_sequence_length = tgt_batch.shape[1]
+    tgt_attention_square = (max_tgt_sequence_length, max_tgt_sequence_length)
 
     full_mask = torch.full(tgt_attention_square, 1)   # full attention
     subsequent_mask = torch.tril(full_mask)           # subsequent sequence should be invisible to each token position
-    subsequent_mask = subsequent_mask.unsqueeze(0)    # add a batch dim (1, max_tgt_sentence_length, max_tgt_sentence_length)
+    subsequent_mask = subsequent_mask.unsqueeze(0)    # add a batch dim (1, max_tgt_sequence_length, max_tgt_sequence_length)
 
     # The source mask is just the source pad mask.
     # The target mask is the intersection of the target pad mask and the subsequent_mask.
