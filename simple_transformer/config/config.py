@@ -30,8 +30,9 @@ class Config(dict):
             self[key] = val
 
     def update(self, d: dict) -> dict:
-        d = self.d.update(d)
-        return Config(d)
+        clone = copy.deepcopy(self.d)
+        clone.update(d)
+        return Config(clone)
 
     def __str__(self) -> str:
         return yaml.dump(self.d, sort_keys=False)
@@ -60,3 +61,4 @@ def load_yaml(path: str, indent: int=0) -> str:
             else:
                 s += ' ' * indent + line
     return s
+
