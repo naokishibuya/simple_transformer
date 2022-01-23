@@ -47,16 +47,16 @@ class Vocab:
 def load_vocab_pair(
     name: str, 
     language_pair: Tuple[str, str],
-    src_language: str,
-    tgt_language: str) -> Tuple[Vocab, Vocab]:
+    source_language: str,
+    target_language: str) -> Tuple[Vocab, Vocab]:
 
     # Load train text pairs
     train_dataset = load_dataset(name, 'train', language_pair)
-    src_texts, tgt_texts = list(zip(*train_dataset))
+    source_texts, target_texts = list(zip(*train_dataset))
 
-    src_vocab = load_vocab(name, src_language, src_texts)
-    tgt_vocab = load_vocab(name, tgt_language, tgt_texts)
-    return src_vocab, tgt_vocab
+    source_vocab = load_vocab(name, source_language, source_texts)
+    target_vocab = load_vocab(name, target_language, target_texts)
+    return source_vocab, target_vocab
 
 
 def load_vocab(name: str, language: str, texts: List[str]) -> Vocab:

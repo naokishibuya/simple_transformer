@@ -7,12 +7,12 @@ from ..data import Vocab, SOS_IDX, EOS_IDX
 class Translator:
     def __init__(self,
                  model: Transformer,
-                 src_vocab: Vocab,
-                 tgt_vocab: Vocab,
+                 source_vocab: Vocab,
+                 target_vocab: Vocab,
                  output_length_extra: int) -> None:
         self.model = model
-        self.src_vocab = src_vocab
-        self.tgt_vocab = tgt_vocab
+        self.source_vocab = source_vocab
+        self.target_vocab = target_vocab
         self.output_length_extra = output_length_extra
 
     def __call__(self, text: str) -> str:
@@ -21,7 +21,7 @@ class Translator:
         self.model.eval()
         with torch.no_grad():
             # Encoder with a batch of one input
-            enc_inp = torch.Tensor([self.src_vocab(text.strip())])
+            enc_inp = torch.Tensor([self.source_vocab(text.strip())])
             enc_out = self.model.encode(enc_inp)
 
             # maximum output size
@@ -44,10 +44,10 @@ class GreedyTranslator(Translator):
     """
     def __init__(self,
                  model: Transformer,
-                 src_vocab: Vocab,
-                 tgt_vocab: Vocab,
+                 source_vocab: Vocab,
+                 target_vocab: Vocab,
                  output_length_extra: int) -> None:
-        super().__init__(model, src_vocab, tgt_vocab, output_length_extra)
+        super().__init__(model, source_vocab, target_vocab, output_length_extra)
 
     def decode(self, enc_out: Tensor, max_output_length: int) -> str:
         # Start with SOS
@@ -67,7 +67,7 @@ class GreedyTranslator(Translator):
 
         # text tokens
         dec_out = dec_inp[0, 1:].numpy()
-        return [self.tgt_vocab.tokens[i] for i in dec_out]
+        return [self.target_vocab.tokens[i] for i in dec_out]
 
 
 class BeamSearchTranslator(Translator):
@@ -75,11 +75,11 @@ class BeamSearchTranslator(Translator):
     """
     def __init__(self,
                  model: Transformer,
-                 src_vocab: Vocab,
-                 tgt_vocab: Vocab,
+                 source_vocab: Vocab,
+                 target_vocab: Vocab,
                  output_length_extra: int,
                  beam_size: int, alpha: float) -> None:
-        super().__init__(model, src_vocab, tgt_vocab, output_length_extra)
+        super().__init__(model, source_vocab, target_vocab, output_length_extra)
         self.beam_size = beam_size
         self.alpha = alpha # sequence length penalty
 
@@ -87,7 +87,7 @@ class BeamSearchTranslator(Translator):
         # Start with SOS
         dec_inp = torch.Tensor([[SOS_IDX]]).long()
         scores = torch.Tensor([0.])
-        vocab_size = len(self.tgt_vocab)
+        vocab_size = len(self.target_vocab)
         for i in range(max_output_length):
             # Encoder output expansion from the second time step to the beam size
             if i==1:
@@ -127,7 +127,7 @@ class BeamSearchTranslator(Translator):
         # convert the top scored sequence to a list of text tokens
         dec_out, _ = max(zip(dec_inp, scores), key=lambda x: x[1])
         dec_out = dec_out[1:].numpy() # remove SOS
-        return [self.tgt_vocab.tokens[i] for i in dec_out if i != EOS_IDX] # remove EOS if exists
+        return [self.target_vocab.tokens[i] for i in dec_out if i != EOS_IDX] # remove EOS if exists
 
 
 def sequence_length_penalty(length: int, alpha: float) -> float:

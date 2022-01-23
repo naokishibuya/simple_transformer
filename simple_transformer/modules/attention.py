@@ -49,8 +49,8 @@ class MultiHeadAttention(nn.Module):
         
         if mask is not None:
             # Mask needs to have an extra dimension to be broadcastable across multiple heads
-            # - Encoder self-attention: (batch_size, 1,                       1, max_src_sequence_length)
-            # - Decoder self-attention: (batch_size, 1, max_tgt_sequence_length, max_tgt_sequence_length)
+            # - Encoder self-attention: (batch_size, 1,                          1, max_source_sequence_length)
+            # - Decoder self-attention: (batch_size, 1, max_target_sequence_length, max_target_sequence_length)
             mask = mask.unsqueeze(1)
 
         # Applies the attention function on all heads in parallel
@@ -84,12 +84,12 @@ def attention(query: Tensor, key: Tensor, value: Tensor, mask: Tensor=None) -> T
 
     [2] For target-source attention, Q and K may have different max sequence length:
 
-    - Q      : (batch_size, num_heads, max_tgt_sequence_length, dim_head)
-    - K, V   : (batch_size, num_heads, max_src_sequence_length, dim_head)
+    - Q      : (batch_size, num_heads, max_target_sequence_length, dim_head)
+    - K, V   : (batch_size, num_heads, max_source_sequence_length, dim_head)
 
     Note: these max sequence lengths are determined per batch.
 
-    - Scores : (batch_size, num_heads, max_tgt_sequence_length, max_src_sequence_length)
+    - Scores : (batch_size, num_heads, max_target_sequence_length, max_source_sequence_length)
 
     It tells us which token in the target sequence is relevant to which tokens in the source sequence.
 
@@ -97,7 +97,7 @@ def attention(query: Tensor, key: Tensor, value: Tensor, mask: Tensor=None) -> T
     
     For Encoder, PAD_IDX tokens are masked which has the following broadcastable shape:
 
-    - Encoder self-attention : (batch_size, 1,                       1, max_src_sequence_length)
+    - Encoder self-attention : (batch_size, 1, 1, max_source_sequence_length)
 
       Note:
       - The second dimension has 1 which is broadcasted across the number of heads.
@@ -105,14 +105,14 @@ def attention(query: Tensor, key: Tensor, value: Tensor, mask: Tensor=None) -> T
 
     For Decoder, PAD_IDX and subsequent tokens are masked:
    
-    - Decoder self-attention : (batch_size, 1, max_tgt_sequence_length, max_tgt_sequence_length)
+    - Decoder self-attention : (batch_size, 1, max_target_sequence_length, max_target_sequence_length)
 
       Note:
       - The second dimension has 1 which is broadcasted across the number of heads.
 
     For Decoder-Encoder link, PAD_IDX tokens are masked in the source tokens:
 
-    - Target-source attention: (batch_size, 1,                       1, max_src_sequence_length)
+    - Target-source attention: (batch_size, 1, 1, max_source_sequence_length)
 
       Note:
       - The second dimension has 1 which is broadcasted across the number of heads.

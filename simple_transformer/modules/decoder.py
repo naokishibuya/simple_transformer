@@ -38,7 +38,7 @@ class DecoderBlock(nn.Module):
         self.layer_norm1 = nn.LayerNorm(dim_embed)
 
         # Target-source
-        self.tgt_src_attn = MultiHeadAttention(num_heads, dim_embed, drop_prob)
+        self.target_source_attn = MultiHeadAttention(num_heads, dim_embed, drop_prob)
         self.layer_norm2 = nn.LayerNorm(dim_embed)
 
         # Position-wise
@@ -58,7 +58,7 @@ class DecoderBlock(nn.Module):
 
     def sub_layer2(self, y: Tensor, x: Tensor, x_mask: Tensor) -> Tensor:
         y = self.layer_norm2(y)
-        y = self.tgt_src_attn(y, x, x_mask)
+        y = self.target_source_attn(y, x, x_mask)
         return y
 
     def sub_layer3(self, y: Tensor) -> Tensor:

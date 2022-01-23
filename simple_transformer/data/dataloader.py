@@ -9,9 +9,9 @@ from .dataset import load_dataset
 from .vocab import Vocab, PAD_IDX, SOS_IDX, EOS_IDX
 
 
-def make_dataloader(dataset: IterableDataset, 
-                    src_vocab: Vocab, 
-                    tgt_vocab: Vocab,
+def make_dataloader(dataset: IterableDataset,
+                    source_vocab: Vocab,
+                    target_vocab: Vocab,
                     batch_size: int,
                     device: torch.device) -> DataLoader:
     """ A batch contains a list of text sentence pairs (source sentence, target sentence).
@@ -25,38 +25,38 @@ def make_dataloader(dataset: IterableDataset,
     """
 
     def collate_fn(batch: List[Tuple[str, str]]) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
-        src_tokens = []
-        tgt_tokens = []
-        for i, (src_sentence, tgt_sentence) in enumerate(batch):
-            src_tokens.append(Tensor(src_vocab(src_sentence)))
-            tgt_tokens.append(Tensor([SOS_IDX] + tgt_vocab(tgt_sentence) + [EOS_IDX]))
+        source_tokens = []
+        target_tokens = []
+        for i, (source_sentence, target_sentence) in enumerate(batch):
+            source_tokens.append(Tensor(source_vocab(source_sentence)))
+            target_tokens.append(Tensor([SOS_IDX] + target_vocab(target_sentence) + [EOS_IDX]))
 
         # Pad with PAD_IDX up to the max sentence length (within the batch)
-        src_batch = pad_sequence(src_tokens, batch_first=True, padding_value=PAD_IDX)
-        tgt_batch = pad_sequence(tgt_tokens, batch_first=True, padding_value=PAD_IDX)
+        source = pad_sequence(source_tokens, batch_first=True, padding_value=PAD_IDX)
+        target = pad_sequence(target_tokens, batch_first=True, padding_value=PAD_IDX)
 
-        tgt_label = tgt_batch[:, 1:]  # Target Labels  =       Target_Sentence_Token_Indices + EOS
-        tgt_batch = tgt_batch[:, :-1] # Decoder Inputs = SOS + Target_Sentence_Token_Indices       # aka Outputs (right shifted)
+        labels = target[:, 1:]  # Target Labels  =       Target_Sentence_Token_Indices + EOS
+        target = target[:, :-1] # Decoder Inputs = SOS + Target_Sentence_Token_Indices       # aka Outputs (right shifted)
 
         # Mask indicates where to ignore while calculating attention values
-        src_mask, tgt_mask = create_masks(src_batch, tgt_batch)
+        source_mask, target_mask = create_masks(source, target)
 
         # move to the device
-        return [x.to(device) for x in [src_batch, tgt_batch, tgt_label, src_mask, tgt_mask]]
+        return [x.to(device) for x in [source, target, labels, source_mask, target_mask]]
 
     return DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
 
 
-def create_masks(src_batch: Tensor, tgt_batch: Tensor) -> Tuple[Tensor, Tensor]:
+def create_masks(source: Tensor, target: Tensor) -> Tuple[Tensor, Tensor]:
     """ Create masks for positions to ignore in attention calculation.
 
     Args:
-        src_batch: source token indicies
-        tgt_batch: target token indicies
+        source: a batch of source token indicies
+        target: a batch of target token indicies
 
     Shape:
-        - src_batch: (batch_size, max_src_sequence_length) # `max` length is source batch
-        - tgt_batch: (batch_size, max_tgt_sequence_length) # `max` length in target batch
+        - source: (batch_size, max_source_sequence_length) # `max` length is source batch
+        - target: (batch_size, max_target_sequence_length) # `max` length in target batch
 
     Returns:
         Source mask batch and target mask batch.  
@@ -98,17 +98,17 @@ def create_masks(src_batch: Tensor, tgt_batch: Tensor) -> Tuple[Tensor, Tensor]:
         ```
     """
     # pad mask - set to 1 where we want to process
-    src_pad_mask = (src_batch != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_tgt_sequence_length)
-    tgt_pad_mask = (tgt_batch != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_src_sequence_length)
+    source_pad_mask = (source != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_target_sequence_length)
+    target_pad_mask = (target != PAD_IDX).unsqueeze(1) # (batch_size, 1, max_source_sequence_length)
 
     # subsequent mask for decoder inputs
-    max_tgt_sequence_length = tgt_batch.shape[1]
-    tgt_attention_square = (max_tgt_sequence_length, max_tgt_sequence_length)
+    max_target_sequence_length = target.shape[1]
+    target_attention_square = (max_target_sequence_length, max_target_sequence_length)
 
-    full_mask = torch.full(tgt_attention_square, 1)   # full attention
-    subsequent_mask = torch.tril(full_mask)           # subsequent sequence should be invisible to each token position
-    subsequent_mask = subsequent_mask.unsqueeze(0)    # add a batch dim (1, max_tgt_sequence_length, max_tgt_sequence_length)
+    full_mask = torch.full(target_attention_square, 1) # full attention
+    subsequent_mask = torch.tril(full_mask)            # subsequent sequence should be invisible to each token position
+    subsequent_mask = subsequent_mask.unsqueeze(0)     # add a batch dim (1, max_target_sequence_length, max_target_sequence_length)
 
     # The source mask is just the source pad mask.
     # The target mask is the intersection of the target pad mask and the subsequent_mask.
-    return src_pad_mask, tgt_pad_mask & subsequent_mask
+    return source_pad_mask, target_pad_mask & subsequent_mask
