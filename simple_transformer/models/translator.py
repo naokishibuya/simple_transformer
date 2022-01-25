@@ -21,13 +21,13 @@ class Translator:
         self.model.eval()
         with torch.no_grad():
             # Encoder with a batch of one input
-            enc_inp = torch.Tensor([self.source_vocab(text.strip())])
-            enc_out = self.model.encode(enc_inp)
+            encoder_input = torch.Tensor([self.source_vocab(text.strip())])
+            encoder_output = self.model.encode(encoder_input)
 
             # maximum output size
-            max_output_length = enc_inp.shape[-1] + self.output_length_extra
+            max_output_length = encoder_input.shape[-1] + self.output_length_extra
 
-            return self.decode(enc_out, max_output_length)
+            return self.decode(encoder_output, max_output_length)
 
     def decode(self, text: str) -> str:
         raise Exception('You must implement decode!')
@@ -49,13 +49,13 @@ class GreedyTranslator(Translator):
                  output_length_extra: int) -> None:
         super().__init__(model, source_vocab, target_vocab, output_length_extra)
 
-    def decode(self, enc_out: Tensor, max_output_length: int) -> str:
+    def decode(self, encoder_output: Tensor, max_output_length: int) -> str:
         # Start with SOS
-        dec_inp = torch.Tensor([[SOS_IDX]]).long()
+        decoder_input = torch.Tensor([[SOS_IDX]]).long()
 
         for _ in range(max_output_length):
             # Decoder prediction
-            logits = self.model.decode(enc_out, dec_inp)
+            logits = self.model.decode(encoder_output, decoder_input)
 
             # Greedy selection
             token_index = torch.argmax(logits[:, -1], keepdim=True)
@@ -63,11 +63,11 @@ class GreedyTranslator(Translator):
                 break
 
             # Next Input to Decoder
-            dec_inp = torch.cat([dec_inp, token_index], dim=1)
+            decoder_input = torch.cat([decoder_input, token_index], dim=1)
 
-        # text tokens
-        dec_out = dec_inp[0, 1:].numpy()
-        return [self.target_vocab.tokens[i] for i in dec_out]
+        # text tokens from a batch with one input excluding SOS
+        decoder_output = decoder_input[0, 1:].numpy()
+        return [self.target_vocab.tokens[i] for i in decoder_output]
 
 
 class BeamSearchTranslator(Translator):
@@ -83,18 +83,18 @@ class BeamSearchTranslator(Translator):
         self.beam_size = beam_size
         self.alpha = alpha # sequence length penalty
 
-    def decode(self, enc_out: Tensor, max_output_length: int) -> str:
+    def decode(self, encoder_output: Tensor, max_output_length: int) -> str:
         # Start with SOS
-        dec_inp = torch.Tensor([[SOS_IDX]]).long()
+        decoder_input = torch.Tensor([[SOS_IDX]]).long()
         scores = torch.Tensor([0.])
         vocab_size = len(self.target_vocab)
         for i in range(max_output_length):
             # Encoder output expansion from the second time step to the beam size
             if i==1:
-                enc_out = enc_out.expand(self.beam_size, *enc_out.shape[1:])
+                encoder_output = encoder_output.expand(self.beam_size, *encoder_output.shape[1:])
 
             # Decoder prediction
-            logits = self.model.decode(enc_out, dec_inp)
+            logits = self.model.decode(encoder_output, decoder_input)
             logits = logits[:, -1] # Last sequence step: [beam_size, sequence_length, vocab_size] => [beam_size, vocab_size]
 
             # Softmax
@@ -102,7 +102,7 @@ class BeamSearchTranslator(Translator):
             log_probs = log_probs / sequence_length_penalty(i+1, self.alpha)
 
             # Update score where EOS has not been reched
-            log_probs[dec_inp[:, -1]==EOS_IDX, :] = 0
+            log_probs[decoder_input[:, -1]==EOS_IDX, :] = 0
             scores = scores.unsqueeze(1) + log_probs # scores [beam_size, 1], log_probs [beam_size, vocab_size]
 
             # Flatten scores from [beams, vocab_size] to [beams * vocab_size] to get top k, and reconstruct beam indices and token indices
@@ -111,23 +111,23 @@ class BeamSearchTranslator(Translator):
             token_indices = torch.remainder(indices, vocab_size)                        # indices %  vocab_size
 
             # Build the next decoder input
-            next_dec_inp = []
+            next_decoder_input = []
             for beam_index, token_index in zip(beam_indices, token_indices):
-                prev_dec_inp = dec_inp[beam_index]
-                if prev_dec_inp[-1]==EOS_IDX:
+                prev_decoder_input = decoder_input[beam_index]
+                if prev_decoder_input[-1]==EOS_IDX:
                     token_index = EOS_IDX # once EOS, always EOS
                 token_index = torch.LongTensor([token_index])
-                next_dec_inp.append(torch.cat([prev_dec_inp, token_index]))
-            dec_inp = torch.vstack(next_dec_inp)
+                next_decoder_input.append(torch.cat([prev_decoder_input, token_index]))
+            decoder_input = torch.vstack(next_decoder_input)
 
             # If all beams are finished, exit
-            if (dec_inp[:, -1]==EOS_IDX).sum() == self.beam_size:
+            if (decoder_input[:, -1]==EOS_IDX).sum() == self.beam_size:
                 break
 
         # convert the top scored sequence to a list of text tokens
-        dec_out, _ = max(zip(dec_inp, scores), key=lambda x: x[1])
-        dec_out = dec_out[1:].numpy() # remove SOS
-        return [self.target_vocab.tokens[i] for i in dec_out if i != EOS_IDX] # remove EOS if exists
+        decoder_output, _ = max(zip(decoder_input, scores), key=lambda x: x[1])
+        decoder_output = decoder_output[1:].numpy() # remove SOS
+        return [self.target_vocab.tokens[i] for i in decoder_output if i != EOS_IDX] # remove EOS if exists
 
 
 def sequence_length_penalty(length: int, alpha: float) -> float:

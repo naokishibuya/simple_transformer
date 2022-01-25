@@ -2,8 +2,8 @@ model:
   name: Transformer
   max_positions: 5000
   # Transformer setting with half embedding dimensions than the base setting
-  num_blocks:    6
+  num_blocks:    2
   num_heads:     8
-  dim_embed:     256
-  dim_pffn:      1024
-  drop_prob:     0.1
+  dim_embed:     128
+  dim_pffn:      512
+  drop_prob:     0.3

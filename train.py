@@ -60,10 +60,13 @@ def main() -> None:
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
     model.to(device)
 
-    # Optimizer, scheduler & loss func
+    # Optimizer, scheduler
     optimizer = T.make_optimizer(model.parameters(), **config.optimizer)
     scheduler = T.make_scheduler(optimizer, **config.scheduler) if 'scheduler' in config else None
-    loss_func = T.make_loss_function(**config.loss).to(device)
+
+    # Loss functions
+    train_loss_func = T.make_loss_function(**config.loss).to(device)
+    valid_loss_func = T.make_loss_function(**config.val_loss).to(device)
 
     # Recover checkpoint
     if checkpoint is not None:
@@ -82,13 +85,13 @@ def main() -> None:
         # train
         train_dataset = T.load_dataset(split='train', **config.dataset)
         train_loader = T.make_dataloader(train_dataset, source_vocab, target_vocab, config.batch_size, device)
-        train_loss = train(epoch, model, train_loader, loss_func, optimizer, scheduler, writer)
+        train_loss = train(epoch, model, train_loader, train_loss_func, optimizer, scheduler, writer)
         writer.add_scalar('train/loss', train_loss, epoch)
 
         # validate
         val_dataset = T.load_dataset(split='valid', **config.dataset)
         val_loader = T.make_dataloader(val_dataset, source_vocab, target_vocab, config.batch_size, device)
-        val_loss = validate(epoch, model, val_loader, loss_func)
+        val_loss = validate(epoch, model, val_loader, valid_loss_func)
         writer.add_scalar('val/loss', val_loss, epoch)
 
         # save the model per epoch
