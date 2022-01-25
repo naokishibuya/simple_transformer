@@ -15,19 +15,19 @@ class TranslationLoss(nn.Module):
         super().__init__()
         self.loss_func = nn.CrossEntropyLoss(ignore_index=PAD_IDX, label_smoothing=label_smoothing)
 
-    def forward(self, logits: Tensor, tgt_batch: Tensor) -> Tensor:
+    def forward(self, logits: Tensor, target: Tensor) -> Tensor:
         """ CrossEntropyLoss expects for each token position to have unnormalized scores for each class.
         In other words, it expects the input shape to be (num_output_tokens, output_vocab_size).
 
-        So, logits (batch_size, max_tgt_sequence_length, output_vocab_size) must be reshaped
-        into (batch_size * max_tgt_sequence_length, output_vocab_size).
+        So, logits (batch_size, max_target_sequence_length, output_vocab_size) must be reshaped
+        into (batch_size * max_target_sequence_length, output_vocab_size).
 
         As for labels, CrossEntropyLoss expects outputs to be a list of target indicies.
-        So, tgt_batch (batch_size, max_tgt_sequence_length) must be reshaped
-        into (batch_size * max_tgt_sequence_length).
+        So, targets (batch_size, max_target_sequence_length) must be reshaped
+        into (batch_size * max_target_sequence_length).
         """
-        tgt_vocab_size = logits.shape[-1]
-        logits = logits.reshape(-1, tgt_vocab_size) # (batch_size * max_sequence_length, output_vocab_size)
-        tgt_batch = tgt_batch.reshape(-1).long()    # (batch_size * max_sequence_length)
+        vocab_size = logits.shape[-1]
+        logits = logits.reshape(-1, vocab_size) # (batch_size * max_sequence_length, output_vocab_size)
+        target = target.reshape(-1).long()      # (batch_size * max_sequence_length)
 
-        return self.loss_func(logits, tgt_batch)
+        return self.loss_func(logits, target)

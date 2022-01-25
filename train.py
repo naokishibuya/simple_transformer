@@ -49,21 +49,24 @@ def main() -> None:
     config.save(os.path.join(log_dir, 'config.yaml'))
 
     # laod vocab pair
-    src_vocab, tgt_vocab = T.load_vocab_pair(**config.vocab)
+    source_vocab, target_vocab = T.load_vocab_pair(**config.vocab)
 
     # Build a model
     model = T.make_model(
-        input_vocab_size=len(src_vocab),
-        output_vocab_size=len(tgt_vocab),
+        input_vocab_size=len(source_vocab),
+        output_vocab_size=len(target_vocab),
         **config.model)
 
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
     model.to(device)
 
-    # Optimizer, scheduler & loss func
+    # Optimizer, scheduler
     optimizer = T.make_optimizer(model.parameters(), **config.optimizer)
     scheduler = T.make_scheduler(optimizer, **config.scheduler) if 'scheduler' in config else None
-    loss_func = T.make_loss_function(**config.loss).to(device)
+
+    # Loss functions
+    train_loss_func = T.make_loss_function(**config.loss).to(device)
+    valid_loss_func = T.make_loss_function(**config.val_loss).to(device)
 
     # Recover checkpoint
     if checkpoint is not None:
@@ -81,14 +84,14 @@ def main() -> None:
     for epoch in range(start_epoch, config.epochs):
         # train
         train_dataset = T.load_dataset(split='train', **config.dataset)
-        train_loader = T.make_dataloader(train_dataset, src_vocab, tgt_vocab, config.batch_size, device)
-        train_loss = train(epoch, model, train_loader, loss_func, optimizer, scheduler, writer)
+        train_loader = T.make_dataloader(train_dataset, source_vocab, target_vocab, config.batch_size, device)
+        train_loss = train(epoch, model, train_loader, train_loss_func, optimizer, scheduler, writer)
         writer.add_scalar('train/loss', train_loss, epoch)
 
         # validate
         val_dataset = T.load_dataset(split='valid', **config.dataset)
-        val_loader = T.make_dataloader(val_dataset, src_vocab, tgt_vocab, config.batch_size, device)
-        val_loss = validate(epoch, model, val_loader, loss_func)
+        val_loader = T.make_dataloader(val_dataset, source_vocab, target_vocab, config.batch_size, device)
+        val_loss = validate(epoch, model, val_loader, valid_loss_func)
         writer.add_scalar('val/loss', val_loss, epoch)
 
         # save the model per epoch
@@ -115,12 +118,12 @@ def train(epoch: int,
     with tqdm(loader, unit='batch') as iter:
         iter.set_description(f'Train {epoch}')
 
-        for src_batch, tgt_batch, tgt_label, src_mask, tgt_mask in iter:
+        for source, target, labels, source_mask, target_mask in iter:
             # feed forward
-            logits = model(src_batch, tgt_batch, src_mask, tgt_mask)
+            logits = model(source, target, source_mask, target_mask)
 
             # loss calculation
-            loss = loss_func(logits, tgt_label)
+            loss = loss_func(logits, labels)
             total_loss += loss.item()
             iter.set_postfix(loss=loss.item())
 
@@ -152,13 +155,13 @@ def validate(epoch: int,
     with tqdm(loader, unit='batch') as iter:
         iter.set_description(f'Valid {epoch}')
 
-        for src_batch, tgt_batch, tgt_label, src_mask, tgt_mask in iter:
+        for source, target, labels, source_mask, target_mask in iter:
             with torch.no_grad():
                 # feed forward
-                logits = model(src_batch, tgt_batch, src_mask, tgt_mask)
+                logits = model(source, target, source_mask, target_mask)
 
                 # loss calculation
-                loss = loss_func(logits, tgt_label)
+                loss = loss_func(logits, labels)
                 total_loss += loss.item()
 
             iter.set_postfix(loss=loss.item())

@@ -20,12 +20,12 @@ def main() -> None:
     # Load config and vocab pair
     model_dir = os.path.dirname(args.checkpoint_path)
     config = T.load_config(os.path.join(model_dir, 'config.yaml'))
-    src_vocab, tgt_vocab = T.load_vocab_pair(**config.vocab)
+    source_vocab, target_vocab = T.load_vocab_pair(**config.vocab)
 
     # Load a pretrained transformer
     model = T.make_model(
-        input_vocab_size= len(src_vocab),
-        output_vocab_size=len(tgt_vocab),
+        input_vocab_size= len(source_vocab),
+        output_vocab_size=len(target_vocab),
         **config.model)
     checkpoint = torch.load(args.checkpoint_path)
     model.load_state_dict(checkpoint['model'])
@@ -37,31 +37,31 @@ def main() -> None:
     print(f'Translator:\n{translator_config}')
     translator = T.make_translator(
         model=model,
-        src_vocab=src_vocab,
-        tgt_vocab=tgt_vocab,
+        source_vocab=source_vocab,
+        target_vocab=target_vocab,
         **translator_config)
 
     # Load test dataset and translate
     test_dataset = T.load_dataset(split='test', **config.dataset)
     outputs = []
     targets = []
-    for src_text, tgt_text in tqdm(test_dataset):
-        output = translator(src_text)
-        target = [tgt_vocab.tokenize(tgt_text)]
+    for source_text, target_text in tqdm(test_dataset):
+        output = translator(source_text)
+        target = [target_vocab.tokenize(target_text)]
         outputs.append(output)
         targets.append(target)
 
         if args.verbose:
-            sentence = handle_spaces(output, tgt_vocab)
+            sentence = handle_spaces(output, target_vocab)
             print('-'*100)
-            print(src_text + tgt_text + sentence)
+            print(source_text + target_text + sentence)
 
     # Compute BLEU score
     score = bleu_score(outputs, targets)
     print(f'BLEU score: {score}')
 
 
-def handle_spaces(output: List[str], tgt_vocab: Vocab) -> str:
+def handle_spaces(output: List[str], target_vocab: Vocab) -> str:
     # Simple handling of spaces (not the best)
     sentence = ''
     for token in output:

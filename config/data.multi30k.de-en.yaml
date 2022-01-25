@@ -3,8 +3,8 @@ vocab:
   language_pair: 
   - 'de'
   - 'en'
-  src_language: de_core_news_sm
-  tgt_language: en_core_web_sm
+  source_language: de_core_news_sm
+  target_language: en_core_web_sm
 
 dataset: 
   name: Multi30k
