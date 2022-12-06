@@ -1,9 +1,8 @@
 import argparse
 import os
-import spacy
+import numpy as np
 from datetime import datetime
 from tqdm import tqdm
-from typing import Tuple
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -112,19 +111,17 @@ def train(epoch: int,
           writer: SummaryWriter) -> float:
     model.train()
 
-    total_loss = 0
-    num_batches = len(loader)
-    
     with tqdm(loader, unit='batch') as iter:
         iter.set_description(f'Train {epoch}')
 
+        losses = []
         for source, target, labels, source_mask, target_mask in iter:
             # feed forward
             logits = model(source, target, source_mask, target_mask)
 
             # loss calculation
             loss = loss_func(logits, labels)
-            total_loss += loss.item()
+            losses.append(loss.item())
             iter.set_postfix(loss=loss.item())
 
             # back-prop
@@ -139,7 +136,7 @@ def train(epoch: int,
                 scheduler.step()
 
     # average training loss
-    avg_loss = total_loss / num_batches
+    avg_loss = np.mean(losses)
     return avg_loss
 
 
@@ -149,12 +146,10 @@ def validate(epoch: int,
              loss_func: torch.nn.Module) -> float:
     model.eval()
 
-    total_loss = 0
-    num_batches = len(loader)
-
     with tqdm(loader, unit='batch') as iter:
         iter.set_description(f'Valid {epoch}')
 
+        losses = []
         for source, target, labels, source_mask, target_mask in iter:
             with torch.no_grad():
                 # feed forward
@@ -162,12 +157,12 @@ def validate(epoch: int,
 
                 # loss calculation
                 loss = loss_func(logits, labels)
-                total_loss += loss.item()
+                losses.append(loss.item())
 
             iter.set_postfix(loss=loss.item())
 
     # average validation loss
-    avg_loss = total_loss / num_batches
+    avg_loss = np.mean(losses)
     return avg_loss
 
 
