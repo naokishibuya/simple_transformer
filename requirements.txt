@@ -3,6 +3,6 @@ pytest==7.2.0
 PyYAML==6.0
 spacy==3.4.3
 tensorboard==2.11.0
-torch==1.13.0
-torchdata==0.5.0
-torchtext==0.14.0
+torch==1.13.1
+torchdata==0.5.1
+torchtext==0.14.1
