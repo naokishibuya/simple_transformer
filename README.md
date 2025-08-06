@@ -103,4 +103,4 @@ pytest tests
 - [Tensor2Tensor by TensorFlow](https://github.com/tensorflow/tensor2tensor)
 - [PyTorch Transformer by PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html)
 - [Language Modeling with nn.Transformer and Torchtext by PyTorch](https://pytorch.org/tutorials/beginner/transformer_tutorial.html)
-- [My Medium Articles](https://naokishibuya.medium.com/list/language-models-454204ed1217)
+- [My Transformer Articles](https://naokishibuya.github.io/#category=Transformer)
